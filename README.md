@@ -1,4 +1,4 @@
-# Weather Telegram Bot (лайт)
+# Weather Telegram Bot
 
 Простой Telegram-бот для получения текущей погоды по городу или геолокации.
 
@@ -46,7 +46,7 @@ OPENWEATHER_LANG=ru
 - `weather/cache.py` — простой in-memory кэш (TTL 5 минут) и хранение единиц на пользователя
 - `weather/formatting.py` — форматирование ответа
 - `config.py` — настройки из `.env`
-- `main.py` — точка входа (aiogram 3)
+- `main.py` — точка входа 
 
 ## Тесты
 Запуск:
@@ -60,3 +60,51 @@ pytest -q
 ## Примечания
 - Для ключа OpenWeather используйте «Current Weather Data» (endpoint `/data/2.5/weather`).
 - Если при первых запросах получаете `401`, проверьте активацию ключа в кабинете OpenWeather и подтверждение e-mail.
+
+## Установка из GitHub (git clone)
+```bash
+git clone https://github.com/Timmn3/weather_bot.git
+cd weather_bot
+
+# (опционально) создать venv
+python -m venv .venv
+# Windows:
+.\.venv\Scripts\activate
+# Linux/Mac:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+
+# Настроить переменные окружения в .env
+cp .env.example .env  # если есть .env.example
+# Открыть .env и указать:
+# BOT_TOKEN=...
+# WEATHER_API_KEY=...
+# DEFAULT_UNITS=metric
+# OPENWEATHER_LANG=ru
+
+# Запуск
+python -m main
+```
+
+##  Запуск через Docker
+1) Сборка образа
+
+```bash
+docker build -t weather-bot .
+```
+
+2) Запуск контейнера (используя .env)
+
+.env не копируется в образ — передаём при запуске:
+```bash
+docker run -d \
+  --name weather-bot \
+  --env-file ./.env \
+  --restart unless-stopped \
+  weather-bot
+```
+3) Логи
+```bash
+docker logs -f weather-bot
+```
