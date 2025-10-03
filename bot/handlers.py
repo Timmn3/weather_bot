@@ -2,7 +2,7 @@ from aiogram import Router, F, Dispatcher
 from aiogram.types import Message, CallbackQuery, ContentType
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-
+import re
 from config import settings
 from weather.api_client import OpenWeatherClient
 from weather.cache import WeatherCache, UserUnitsStore
@@ -100,6 +100,42 @@ async def on_location(message: Message) -> None:
 
     cache.set(cache_key, report)
     await message.answer(format_weather_report(report, units))
+
+@router.message(F.text.regexp(r"^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$"))
+async def manual_coords(message: Message) -> None:
+    """Обработка ручного ввода координат в формате 'lat, lon'."""
+    try:
+        lat_str, lon_str = re.split(r",\s*", message.text.strip())
+        lat, lon = float(lat_str), float(lon_str)
+    except Exception:
+        await message.answer(
+            "Не удалось разобрать координаты 😔\n"
+            "Пример правильного ввода:\n"
+            "<code>55.7558, 37.6176</code> (Москва)\n"
+            "<code>40.7128, -74.0060</code> (Нью-Йорк)"
+        )
+        return
+
+    units = user_units.get_units(message.from_user.id)
+    cache_key = ("coords", round(lat, 3), round(lon, 3), units)
+
+    cached = cache.get(cache_key)
+    if cached:
+        await message.answer(format_weather_report(cached, units))
+        return
+
+    try:
+        report = await client.get_by_coords(lat=lat, lon=lon, units=units)
+    except Exception:
+        await message.answer(
+            "Не удалось получить погоду по координатам 😔\n"
+            "Попробуй ещё раз или отправь локацию кнопкой."
+        )
+        return
+
+    cache.set(cache_key, report)
+    await message.answer(format_weather_report(report, units))
+
 
 
 def setup_handlers(dp: Dispatcher) -> None:
