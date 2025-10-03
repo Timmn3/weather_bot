@@ -107,17 +107,29 @@ async def on_location(message: Message) -> None:
     await message.answer(format_weather_report(report, units))
 
 # ручной ввод координат: "55.7558, 37.6176"
-@router.message(F.text.regexp(r"^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$"))
+@router.message(F.text)
 async def manual_coords(message: Message) -> None:
+    text = message.text.strip()
+
+    # Проверяем шаблон "lat, lon"
+    if not re.match(r"^\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*$", text):
+        # Сообщение пользователю, если формат некорректный
+        if any(ch.isdigit() for ch in text):  # похоже на координаты, но не валидно
+            await message.answer(
+                "Некорректный формат координат.\n"
+                "Пример правильного ввода:\n"
+                "<code>55.7558, 37.6176</code> (Москва)\n"
+                "<code>40.7128, -74.0060</code> (Нью-Йорк)"
+            )
+        return
+
     try:
-        lat_str, lon_str = re.split(r",\s*", message.text.strip())
+        lat_str, lon_str = re.split(r",\s*", text)
         lat, lon = float(lat_str), float(lon_str)
     except Exception:
         await message.answer(
-            "Не удалось разобрать координаты 😔\n"
-            "Пример:\n"
-            "<code>55.7558, 37.6176</code> (Москва)\n"
-            "<code>40.7128, -74.0060</code> (Нью-Йорк)"
+            "Не удалось обработать координаты.\n"
+            "Пример: <code>55.7558, 37.6176</code>"
         )
         return
 
@@ -133,7 +145,8 @@ async def manual_coords(message: Message) -> None:
         report = await client.get_by_coords(lat=lat, lon=lon, units=units)
     except Exception:
         await message.answer(
-            "Не удалось получить погоду по координатам 😔\n"
+            "Не удалось получить погоду по координатам.\n"
+            "Попробуй снова или задай город через /weather <город>."
         )
         return
 
