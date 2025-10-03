@@ -5,7 +5,6 @@ from weather.models import WeatherReport
 @pytest.mark.asyncio
 async def test_to_report_parsing():
     client = OpenWeatherClient(api_key="test", lang="ru")
-    # упрощённый фрагмент ответа OpenWeather
     data = {
         "name": "Moscow",
         "weather": [{"description": "clear sky"}],
