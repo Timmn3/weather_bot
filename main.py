@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums.parse_mode import ParseMode
 
 from config import settings
@@ -12,7 +13,10 @@ async def main():
     if not settings.bot_token:
         raise RuntimeError("BOT_TOKEN не задан. Укажи его в .env")
 
-    bot = Bot(token=settings.bot_token, parse_mode=ParseMode.HTML)
+    bot = Bot(
+        token=settings.bot_token,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
     dp = Dispatcher()
 
     setup_handlers(dp)
@@ -22,3 +26,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

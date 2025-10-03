@@ -18,10 +18,11 @@ client = OpenWeatherClient(api_key=settings.weather_api_key, lang=settings.openw
 
 @router.message(Command("start"))
 async def cmd_start(message: Message) -> None:
+    # ВАЖНО: экранируем угловые скобки из-за HTML parse_mode
     text = (
         "Привет! Я бот погоды.\n\n"
         "Команды:\n"
-        "/weather <город> — пример: /weather Berlin\n"
+        "/weather &lt;город&gt; — пример: <code>/weather Berlin</code>\n"
         "/celsius — вывод в °C\n"
         "/fahrenheit — вывод в °F\n\n"
         "Можно отправить локацию кнопкой ниже или ввести координаты:\n"
@@ -105,7 +106,7 @@ async def on_location(message: Message) -> None:
     cache.set(cache_key, report)
     await message.answer(format_weather_report(report, units))
 
-# ручной ввод координат
+# ручной ввод координат: "55.7558, 37.6176"
 @router.message(F.text.regexp(r"^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$"))
 async def manual_coords(message: Message) -> None:
     try:
@@ -133,7 +134,6 @@ async def manual_coords(message: Message) -> None:
     except Exception:
         await message.answer(
             "Не удалось получить погоду по координатам 😔\n"
-            "Попробуй ещё раз или отправь локацию кнопкой."
         )
         return
 
