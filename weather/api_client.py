@@ -10,6 +10,19 @@ class OpenWeatherClient:
         self.api_key = api_key
         self.lang = lang
 
+    async def _request(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(OPENWEATHER_WEATHER_URL, params=params)
+            # Пытаемся показать полезное сообщение об ошибке
+            if r.status_code >= 400:
+                try:
+                    detail = r.json()
+                except Exception:
+                    detail = {"text": r.text}
+                # Поднимем осмысленную ошибку (увидим cod/message)
+                raise RuntimeError(f"OpenWeather error {r.status_code}: {detail}")
+            return r.json()
+
     async def get_by_city(self, city: str, units: str = "metric") -> WeatherReport:
         params = {
             "q": city,
@@ -17,10 +30,7 @@ class OpenWeatherClient:
             "units": units,
             "lang": self.lang,
         }
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.get(OPENWEATHER_WEATHER_URL, params=params)
-            r.raise_for_status()
-            data = r.json()
+        data = await self._request(params)
         return self._to_report(data)
 
     async def get_by_coords(self, lat: float, lon: float, units: str = "metric") -> WeatherReport:
@@ -31,10 +41,7 @@ class OpenWeatherClient:
             "units": units,
             "lang": self.lang,
         }
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.get(OPENWEATHER_WEATHER_URL, params=params)
-            r.raise_for_status()
-            data = r.json()
+        data = await self._request(params)
         return self._to_report(data)
 
     def _to_report(self, data: Dict[str, Any]) -> WeatherReport:
