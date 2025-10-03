@@ -31,7 +31,7 @@ async def cmd_start(message: Message) -> None:
 async def units_change(cb: CallbackQuery) -> None:
     val = cb.data.split(":", 1)[1]
     user_units.set_units(cb.from_user.id, val)
-    await cb.message.edit_reply_markup(units_inline(val))
+    await cb.message.edit_reply_markup(reply_markup=units_inline(val))
     await cb.answer("Настройки сохранены.")
 
 @router.message(Command("weather"))
